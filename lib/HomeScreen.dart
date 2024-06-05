@@ -1,6 +1,7 @@
 // overflow error
 
 
+import 'package:company/stats.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -174,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
               leading: Icon(Icons.addchart_rounded,color: Colors.grey[600],),
               title: Text('S T A T I S T I C S', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold, color: Colors.grey[600])),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => StatisticsScreen()));
               },
             ),
           ],

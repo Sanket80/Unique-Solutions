@@ -65,8 +65,16 @@ class _InputDataState extends State<InputData> {
   }
 
   void handleUnpaid() {
-    // Implement your unpaid logic here
-    print("Marked as unpaid");
+    // mark paid amount as 0 and remaining amount as total amount
+    paidController.text = '0.0';
+    remainingController.text = _totalPriceController.text;
+
+    // show snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Marked as unpaid'),
+      ),
+    );
   }
 
   @override
