@@ -128,12 +128,57 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Search Records'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.black54,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 34,
+                    backgroundImage: AssetImage('assets/images/character.png'),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Company App',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.search, color: Colors.grey[600],),
+              title: Text('S E A R C H', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold, color: Colors.grey[600])),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.add,color: Colors.grey[600],),
+              title: Text('R E G I S T E R', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold, color: Colors.grey[600])),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => InputData()));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.addchart_rounded,color: Colors.grey[600],),
+              title: Text('S T A T I S T I C S', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold, color: Colors.grey[600])),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
