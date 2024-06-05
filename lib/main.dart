@@ -32,6 +32,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Company App',
+      theme: ThemeData(
+        primarySwatch: Colors.grey, // Set the primary color here
+      ),
       home: const HomeScreen(),
     );
   }

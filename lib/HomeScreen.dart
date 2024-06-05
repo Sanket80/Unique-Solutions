@@ -72,6 +72,10 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          backgroundColor: Colors.white,
           title: Text('Edit Record'),
           content: SingleChildScrollView(
             child: Column(
@@ -96,13 +100,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('Cancel',style: TextStyle(
+                color: Colors.grey[500],
+              ),),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Save'),
+              child: Text('Save',style: TextStyle(color: Colors.black),),
               onPressed: () async {
                 try {
                   await FirebaseFirestore.instance.collection('Data').doc(record['id']).update({
@@ -328,16 +334,6 @@ class _HomeScreenState extends State<HomeScreen> {
               )
                   : const Text('Record not found'),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => InputData()));
-        },
-        backgroundColor: Colors.black,
-        child: Icon(Icons.add, color: Colors.white),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30), // Adjust the radius as needed
         ),
       ),
     );
