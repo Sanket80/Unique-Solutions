@@ -1,3 +1,6 @@
+// overflow error
+
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +20,114 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSearching = false;
   bool _recordFound = false;
   List<Map<String, dynamic>>? _recordData;
+
+  Future<void> _deleteRecord(String documentId) async {
+    try {
+      await FirebaseFirestore.instance.collection('Data').doc(documentId).delete();
+      print('Record deleted successfully');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Record deleted successfully')),
+      );
+
+      // Remove the deleted record from the local list and update the state
+      setState(() {
+        _recordData = _recordData?.where((record) => record['id'] != documentId).toList();
+
+        // If _recordData is empty, set _recordFound to false
+        if (_recordData == null || _recordData!.isEmpty) {
+          _recordFound = false;
+        }
+      });
+    } catch (error) {
+      print('Error deleting record: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete record')),
+      );
+    }
+  }
+
+
+  Future<void> _editRecord(Map<String, dynamic> record) async {
+    TextEditingController totalPriceController = TextEditingController(text: record['total_price'].toString());
+    TextEditingController paidAmountController = TextEditingController(text: record['paid_amount'].toString());
+    TextEditingController remainingAmountController = TextEditingController(text: record['remaining_amount'].toString());
+
+    // Function to update remaining amount
+    void _updateRemainingAmount() {
+      double totalPrice = double.tryParse(totalPriceController.text) ?? 0;
+      double paidAmount = double.tryParse(paidAmountController.text) ?? 0;
+      double remainingAmount = totalPrice - paidAmount;
+      remainingAmountController.text = remainingAmount.toString();
+    }
+
+    // Add listeners to update remaining amount
+    totalPriceController.addListener(_updateRemainingAmount);
+    paidAmountController.addListener(_updateRemainingAmount);
+
+    // Initial calculation of remaining amount
+    _updateRemainingAmount();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Record'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: totalPriceController,
+                  decoration: InputDecoration(labelText: 'Total Amount'),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: paidAmountController,
+                  decoration: InputDecoration(labelText: 'Paid Amount'),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: remainingAmountController,
+                  decoration: InputDecoration(labelText: 'Unpaid Amount'),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Save'),
+              onPressed: () async {
+                try {
+                  await FirebaseFirestore.instance.collection('Data').doc(record['id']).update({
+                    'total_price': double.parse(totalPriceController.text),
+                    'paid_amount': double.parse(paidAmountController.text),
+                    'remaining_amount': double.parse(remainingAmountController.text),
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Record updated successfully')),
+                  );
+                  Navigator.of(context).pop();
+                  _searchForRecord(); // Refresh the search result
+                } catch (error) {
+                  print('Error updating record: $error');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to update record')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -84,20 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         Image.asset('assets/images/character.png', width: 250, height: 180),
-                        // Rounded button to add new record for the searched name
-                        ElevatedButton(
-                          onPressed: () {
-                            // Navigator.push(context, MaterialPageRoute(builder: (context) => InputData(name: _searchText)));
-                          },
-                          child: const Text('Add'),
-                          style: ElevatedButton.styleFrom(
-                            primary: Colors.black,
-                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
+                        IconButton(onPressed: (){}, icon: Icon(Icons.add, color: Colors.black, size: 30,)),
                       ],
                     ),
 
@@ -119,21 +217,58 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Quantity: ${record['quantity']}',style: TextStyle(fontSize: 17),),
-                                    Text('Price: ${record['price']}', style: TextStyle(fontSize: 17)),
-                                    Text('Total Price: ${record['total_price']}', style: TextStyle(fontSize: 17)),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Paid: ${record['paid_amount']}', style: TextStyle(fontSize: 17)),
-                                        const SizedBox(width: 40),
-                                        Text('Due: ${record['remaining_amount']}', style: TextStyle(fontSize: 17)),
+                                        Text('Quantity: ${record['quantity']}',style: TextStyle(fontSize: 17),),
+                                        Row(
+                                          children: [
+                                            IconButton(onPressed: () {
+                                              _editRecord(record);
+                                            }, icon: Icon(Icons.edit, color: Colors.grey[600], size: 22,)),
+                                            IconButton(onPressed: () {
+                                              _deleteRecord(record['id']);
+                                            }, icon: Icon(Icons.delete_forever_rounded, color: Colors.grey[600], size: 22,)),
+                                          ],
+                                        ),
                                       ],
                                     ),
+                                    Text('Price: ${record['price']}', style: TextStyle(fontSize: 17)),
+                                    const SizedBox(height: 6),
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              Text('${record['total_price']}', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
+                                              Text('Total Amt', style: TextStyle(fontSize: 15,color: Colors.grey[500])),
+                                            ],
+                                          ),
+                                          SizedBox(width: 40,),
+                                          Column(
+                                            children: [
+                                              Text('${record['paid_amount']}', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
+                                              Text('Paid', style: TextStyle(fontSize: 15,color: Colors.grey[500])),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 40),
+                                          Column(
+                                            children: [
+                                              Text('${record['remaining_amount']}', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
+                                              Text('Due', style: TextStyle(fontSize: 15,color: Colors.grey[500])),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
                                     Text(
                                       'Date: ${DateFormat.yMMMMd().format(record['date'].toDate())}', style: TextStyle(fontSize: 17),
                                     ),
-                                    Divider(),
+                                    Text('--------------------------------------------------', style: TextStyle(fontSize: 17),),
+
                                   ],
                                 ),
                               );
@@ -177,7 +312,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (querySnapshot.docs.isNotEmpty) {
       setState(() {
         _recordFound = true;
-        _recordData = querySnapshot.docs.map((doc) => doc.data()).toList();
+        _recordData = querySnapshot.docs.map((doc) {
+          var data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id; // Add document ID to the data map
+          return data;
+        }).toList();
       });
     } else {
       setState(() {

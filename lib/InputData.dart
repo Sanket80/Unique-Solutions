@@ -102,8 +102,13 @@ class _InputDataState extends State<InputData> {
     final paidAmount = paidController.text;
     final remainingAmount = remainingController.text;
 
+    // Generate a new document ID
+    final newDoc = FirebaseFirestore.instance.collection('Data').doc();
+    final docId = newDoc.id;
+
     try {
-      await FirebaseFirestore.instance.collection('Data').add({
+      await newDoc.set({
+        'id': docId,  // Add the generated ID to the document data
         'name': name,
         'quantity': quantity,
         'price': price,
@@ -112,7 +117,8 @@ class _InputDataState extends State<InputData> {
         'remaining_amount': remainingAmount,
         'date': DateTime.now(),
       });
-      print('Data added to Firestore');
+
+      print('Data added to Firestore with ID: $docId');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Record added successfully'),
@@ -130,6 +136,7 @@ class _InputDataState extends State<InputData> {
       print('Error adding data to Firestore: $error');
     }
   }
+
 
 
 
