@@ -18,64 +18,64 @@ class _InputDataState extends State<InputData> {
   TextEditingController paidController = TextEditingController();
   TextEditingController remainingController = TextEditingController();
 
-  void handlePaid(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-
-        paidController.addListener(() {
-          final paidAmount = double.tryParse(paidController.text) ?? 0.0;
-          final totalAmount = double.tryParse(_totalPriceController.text) ?? 0.0;
-          final remainingAmount = totalAmount - paidAmount;
-          remainingController.text = remainingAmount.toStringAsFixed(2);
-        });
-
-        return AlertDialog(
-          title: Text('Paid Amount'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: paidController,
-                decoration: InputDecoration(labelText: 'Paid Amount'),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: remainingController,
-                decoration: InputDecoration(labelText: 'Remaining Amount'),
-                keyboardType: TextInputType.number,
-                enabled: false,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Implement your submit logic here
-                print('Paid Amount: ${paidController.text}');
-                print('Remaining Amount: ${remainingController.text}');
-              },
-              child: Text('Submit'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void handleUnpaid() {
-    // mark paid amount as 0 and remaining amount as total amount
-    paidController.text = '0.0';
-    remainingController.text = _totalPriceController.text;
-
-    // show snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Marked as unpaid'),
-      ),
-    );
-  }
+  // void handlePaid(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //
+  //       paidController.addListener(() {
+  //         final paidAmount = double.tryParse(paidController.text) ?? 0.0;
+  //         final totalAmount = double.tryParse(_totalPriceController.text) ?? 0.0;
+  //         final remainingAmount = totalAmount - paidAmount;
+  //         remainingController.text = remainingAmount.toStringAsFixed(2);
+  //       });
+  //
+  //       return AlertDialog(
+  //         title: Text('Paid Amount'),
+  //         content: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             TextField(
+  //               controller: paidController,
+  //               decoration: InputDecoration(labelText: 'Paid Amount'),
+  //               keyboardType: TextInputType.number,
+  //             ),
+  //             TextField(
+  //               controller: remainingController,
+  //               decoration: InputDecoration(labelText: 'Remaining Amount'),
+  //               keyboardType: TextInputType.number,
+  //               enabled: false,
+  //             ),
+  //           ],
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //               // Implement your submit logic here
+  //               print('Paid Amount: ${paidController.text}');
+  //               print('Remaining Amount: ${remainingController.text}');
+  //             },
+  //             child: Text('Submit'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+  //
+  // void handleUnpaid() {
+  //   // mark paid amount as 0 and remaining amount as total amount
+  //   paidController.text = '0.0';
+  //   remainingController.text = _totalPriceController.text;
+  //
+  //   // show snackbar
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text('Marked as unpaid'),
+  //     ),
+  //   );
+  // }
 
   @override
   void initState() {
@@ -107,8 +107,8 @@ class _InputDataState extends State<InputData> {
     final quantity = _quantityController.text;
     final price = _priceController.text;
     final totalPrice = _totalPriceController.text;
-    final paidAmount = paidController.text;
-    final remainingAmount = remainingController.text;
+    final paidAmount = paidController.text.isNotEmpty ? paidController.text : '-';
+    final remainingAmount = remainingController.text.isNotEmpty ? remainingController.text : '-';
 
     // Generate a new document ID
     final newDoc = FirebaseFirestore.instance.collection('Data').doc();
@@ -144,8 +144,6 @@ class _InputDataState extends State<InputData> {
       print('Error adding data to Firestore: $error');
     }
   }
-
-
 
 
   @override
@@ -220,15 +218,6 @@ class _InputDataState extends State<InputData> {
                   ),
                   enabled: false,
                 ),
-              ),
-              SizedBox(height:8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CustomButton(label: 'Paid', color: Colors.lightGreen, onPressed: () => handlePaid(context)),
-                  const SizedBox(width: 16),
-                  CustomButton(label: 'Unpaid', color: Colors.red, onPressed: handleUnpaid),
-                ],
               ),
 
               const SizedBox(height: 20),
