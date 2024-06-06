@@ -208,7 +208,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Icon(Icons.search, color: Colors.white),
                     ),
                     Expanded(
                       child: TextField(
@@ -297,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: isPaid ? Colors.green : Colors.red,
-                                      borderRadius: BorderRadius.circular(5),
+                                      borderRadius: BorderRadius.circular(2),
                                     ),
                                     child: Text(
                                       isPaid ? 'Paid' : 'Unpaid',
@@ -312,7 +311,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             ],
                           ),
-                          const SizedBox(height: 6),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -409,6 +407,9 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       if (filteredRecords.isNotEmpty) {
+        // Sort the filtered records by date
+        filteredRecords.sort((a, b) => a['date'].compareTo(b['date']));
+
         setState(() {
           _recordFound = true;
           _recordData = filteredRecords;
