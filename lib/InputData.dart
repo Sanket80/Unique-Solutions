@@ -78,6 +78,11 @@ class _InputDataState extends State<InputData> {
   //   );
   // }
 
+  String? selectedCategory;
+  String? selectedWeight;
+  List<String> categories = ['Gloves', 'Cotton'];
+  List<int> gloveWeights = [40, 50, 60, 70, 80, 90];
+
   @override
   void initState() {
     super.initState();
@@ -111,6 +116,8 @@ class _InputDataState extends State<InputData> {
     final totalPrice = _totalPriceController.text;
     final paidAmount = '0.0';
     final remainingAmount = totalPrice;
+    final category = selectedCategory;
+    final weight = selectedWeight;
 
     // Generate a new document ID
     final newDoc = FirebaseFirestore.instance.collection('Data').doc();
@@ -120,7 +127,9 @@ class _InputDataState extends State<InputData> {
       await newDoc.set({
         'id': docId,  // Add the generated ID to the document data
         'name': name,
+        'category': category,
         'quantity': quantity,
+        'weight': weight,
         'price': price,
         'total_price': totalPrice,
         'paid_amount': paidAmount,
@@ -137,7 +146,9 @@ class _InputDataState extends State<InputData> {
 
       // Clear text fields after adding the record
       _nameController.clear();
+      selectedCategory = null;
       _quantityController.clear();
+      selectedWeight = null;
       _priceController.clear();
       _totalPriceController.clear();
       paidController.clear();
@@ -186,6 +197,45 @@ class _InputDataState extends State<InputData> {
                 ),
               ),
               const SizedBox(height: 8),
+              // text field for category
+              // Category Dropdown
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                child: Container(
+                  height: 62,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black54), // Match the TextField border color
+                    borderRadius: BorderRadius.circular(4.0), // Match the TextField border radius
+                  ),
+                  child: DropdownButtonHideUnderline( // Hide the default underline of DropdownButton
+                    child: DropdownButton<String>(
+                      value: selectedCategory,
+                      hint: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12),
+                        child: Text('Select Category',style: TextStyle(color: Colors.grey[700])),
+                      ),
+                      isExpanded: true,
+                      items: categories.map((String category) {
+                        return DropdownMenuItem<String>(
+                          value: category,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12), // Increase vertical padding
+                            child: Text(category,style: TextStyle(color: Colors.grey[700]),),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCategory = value;
+                          selectedWeight = null; // Reset weight when category changes
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 18.0),
                 child: TextField(
@@ -197,6 +247,55 @@ class _InputDataState extends State<InputData> {
                   keyboardType: TextInputType.number,
                 ),
               ),
+              const SizedBox(height: 8),
+              // want to add dropdown for weight, if category is gloves, then i want dropdown and if categeory is cotton, i wnat textfield
+              if(selectedCategory == 'Gloves')
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                  child: Container(
+                    height: 62,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black54), // Match the TextField border color
+                      borderRadius: BorderRadius.circular(4.0), // Match the TextField border radius
+                    ),
+                    child: DropdownButtonHideUnderline( // Hide the default underline of DropdownButton
+                      child: DropdownButton<String>(
+                        value: selectedWeight,
+                        hint: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12), // Increase vertical padding
+                          child: const Text('Select Weight'),
+                        ),
+                        isExpanded: true,
+                        items: gloveWeights.map((int weight) {
+                          return DropdownMenuItem<String>(
+                            value: {weight}.toString(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12), // Increase vertical padding
+                              // in gms
+                              child: Text('$weight gms',style: TextStyle(color: Colors.grey[700]),),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedWeight = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                )
+              else if (selectedCategory == 'Cotton')
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'Enter Weight (kgs)',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 18.0),
