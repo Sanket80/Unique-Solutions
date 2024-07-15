@@ -253,7 +253,10 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               Image.asset('assets/images/character.png', width: 250, height: 180),
-              IconButton(onPressed: (){}, icon: Icon(Icons.add, color: Colors.black, size: 30,)),
+              IconButton(onPressed: (){
+                // want to pass the name to the input data screen
+                Navigator.push(context, MaterialPageRoute(builder: (context) => InputData(name: _recordData![0]['name'])));
+              }, icon: Icon(Icons.add, color: Colors.black, size: 30,)),
             ],
           ),
 
@@ -410,7 +413,7 @@ class _HomeScreenState extends State<HomeScreen> {
       querySnapshot.docs.forEach((doc) {
         var data = doc.data() as Map<String, dynamic>;
         String name = data['name'].toString().toLowerCase().trim(); // Convert to lowercase and trim spaces
-        if (name.contains(searchTextTrimmed)) {
+        if (name == searchTextTrimmed) {
           data['id'] = doc.id; // Add document ID to the data map
 
           // Ensure numeric values for calculations

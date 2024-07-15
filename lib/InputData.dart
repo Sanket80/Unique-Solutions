@@ -4,7 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InputData extends StatefulWidget {
-  const InputData({Key? key});
+  final String? name;
+  const InputData({Key? key , this.name}) : super(key: key);
 
   @override
   State<InputData> createState() => _InputDataState();
@@ -80,6 +81,7 @@ class _InputDataState extends State<InputData> {
   @override
   void initState() {
     super.initState();
+    _nameController.text = widget.name ?? '';
     _quantityController.addListener(_calculateTotalPrice);
     _priceController.addListener(_calculateTotalPrice);
   }
