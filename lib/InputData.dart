@@ -107,8 +107,8 @@ class _InputDataState extends State<InputData> {
     final quantity = _quantityController.text;
     final price = _priceController.text;
     final totalPrice = _totalPriceController.text;
-    final paidAmount = paidController.text.isNotEmpty ? paidController.text : '-';
-    final remainingAmount = remainingController.text.isNotEmpty ? remainingController.text : '-';
+    final paidAmount = '0.0';
+    final remainingAmount = totalPrice;
 
     // Generate a new document ID
     final newDoc = FirebaseFirestore.instance.collection('Data').doc();

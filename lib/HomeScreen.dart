@@ -382,14 +382,24 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _searchForRecord() async {
+    // Trim spaces from the search query
+    final searchTextTrimmed = _searchText.trim().toLowerCase();
+
+    // Check if the search text is empty
+    if (searchTextTrimmed.isEmpty) {
+      // Show a message indicating that the name field cannot be empty
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a name to search.'),
+        ),
+      );
+      return; // Exit the method without performing the search
+    }
     setState(() {
       _isSearching = true;
       _recordFound = false;
       _recordData = null;
     });
-
-    // Trim spaces from the search query
-    final searchTextTrimmed = _searchText.trim().toLowerCase();
 
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Data')
@@ -402,6 +412,11 @@ class _HomeScreenState extends State<HomeScreen> {
         String name = data['name'].toString().toLowerCase().trim(); // Convert to lowercase and trim spaces
         if (name.contains(searchTextTrimmed)) {
           data['id'] = doc.id; // Add document ID to the data map
+
+          // Ensure numeric values for calculations
+          data['paid_amount'] = double.tryParse(data['paid_amount'])?.toStringAsFixed(2) ?? '0.0';
+          data['remaining_amount'] = double.tryParse(data['remaining_amount'])?.toStringAsFixed(2) ?? '0.0';
+
           filteredRecords.add(data);
         }
       });
