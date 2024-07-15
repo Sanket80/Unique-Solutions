@@ -18,6 +18,7 @@ class _InputDataState extends State<InputData> {
   TextEditingController _totalPriceController = TextEditingController();
   TextEditingController paidController = TextEditingController();
   TextEditingController remainingController = TextEditingController();
+  TextEditingController _cottonWeightController = TextEditingController();
 
   // void handlePaid(BuildContext context) {
   //   showDialog(
@@ -117,7 +118,7 @@ class _InputDataState extends State<InputData> {
     final paidAmount = '0.0';
     final remainingAmount = totalPrice;
     final category = selectedCategory;
-    final weight = selectedWeight;
+    final weight = selectedCategory == 'Cotton' ? '${_cottonWeightController.text} kg' : '$selectedWeight gms';
 
     // Generate a new document ID
     final newDoc = FirebaseFirestore.instance.collection('Data').doc();
@@ -268,7 +269,7 @@ class _InputDataState extends State<InputData> {
                         isExpanded: true,
                         items: gloveWeights.map((int weight) {
                           return DropdownMenuItem<String>(
-                            value: {weight}.toString(),
+                            value: weight.toString(),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12), // Increase vertical padding
                               // in gms
@@ -289,6 +290,7 @@ class _InputDataState extends State<InputData> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 18.0),
                   child: TextField(
+                    controller: _cottonWeightController,
                     decoration: const InputDecoration(
                       hintText: 'Enter Weight (kgs)',
                       border: OutlineInputBorder(),

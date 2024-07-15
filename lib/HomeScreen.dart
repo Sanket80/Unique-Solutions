@@ -283,50 +283,103 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              // Text number on the left
                               Container(
                                 child: Text(
                                   '${index + 1}.',
-                                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold,fontSize: 20),
+                                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
                                 ),
                               ),
 
+                              // Spacer to push the image to the center
+                              Expanded(
+                                child: Center(
+                                  child: Container(
+                                    width: 70, // Width of the circular container
+                                    height: 70, // Height of the circular container
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle, // Makes the container circular
+                                      border: Border.all(color: Colors.grey, width: 2), // Circular border
+                                    ),
+                                    child: ClipOval( // Clips the image to be circular
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Image.asset(
+                                          record['category'] == 'Gloves'
+                                              ? 'assets/images/g1.png' // Path to gloves image
+                                              : 'assets/images/c3.png', // Path to cotton image
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover, // Ensures the image covers the circular area
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Icons on the rightmost side
                               SizedBox(width: 10),
                               Row(
                                 children: [
                                   Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: isPaid ? Colors.green : Colors.red,
-                                      borderRadius: BorderRadius.circular(2),
+                                      borderRadius: BorderRadius.circular(60),
                                     ),
-                                    child: Text(
-                                      isPaid ? 'Paid' : 'Unpaid',
-                                      style: TextStyle(color: Colors.white),
+                                    child: Icon(
+                                      isPaid ? Icons.check : Icons.close, // Check icon for paid, close icon for unpaid
+                                      color: Colors.white,
+                                      size: 20, // Adjust size as needed
                                     ),
                                   ),
-                                  IconButton(onPressed: () {
-                                    _editRecord(record);
-                                  }, icon: Icon(Icons.edit, color: Colors.grey[600], size: 22,)),
                                 ],
                               ),
-
                             ],
                           ),
+                          const SizedBox(height: 4),
+
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          //   children: [
+                          //     Text('Quantity: ${record['quantity']}',style: TextStyle(fontSize: 17),),
+                          //     Row(
+                          //       children: [
+                          //         IconButton(
+                          //         padding: EdgeInsets.zero,
+                          //           onPressed: () {
+                          //             _editRecord(record);
+                          //           },
+                          //           icon: Icon(Icons.edit, color: Colors.grey[600], size: 22),
+                          //         ),
+                          //         // IconButton(
+                          //         //   onPressed: () {
+                          //         //     _deleteRecord(record['id']);
+                          //         //   },
+                          //         //   icon: Icon(Icons.delete_forever_rounded, color: Colors.grey[600], size: 22),
+                          //         // ),
+                          //       ],
+                          //     ),
+                          //
+                          //   ],
+                          // ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Quantity: ${record['quantity']}',style: TextStyle(fontSize: 17),),
-                              Row(
-                                children: [
-                                  IconButton(onPressed: () {
-                                    _deleteRecord(record['id']);
-                                  }, icon: Icon(Icons.delete_forever_rounded, color: Colors.grey[600], size: 22,)),
-                                ],
-                              ),
+                              Text('Quantity: ${record['quantity']}', style: TextStyle(fontSize: 17)),
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                              onPressed: () {
+                                _editRecord(record);
+                              },
+                              icon: Icon(Icons.edit, color: Colors.grey[600], size: 22),
+                            ),
                             ],
                           ),
+                          Text('Weight: ${record['weight']}', style: TextStyle(fontSize: 17)),
+                          const SizedBox(height: 4),
                           Text('Price: ${record['price']}', style: TextStyle(fontSize: 17)),
                           const SizedBox(height: 6),
                           SingleChildScrollView(
