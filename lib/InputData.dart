@@ -164,7 +164,7 @@ class _InputDataState extends State<InputData> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Company App'),
+        title: const Text('Unique Solutions'),
         // back button
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -177,11 +177,11 @@ class _InputDataState extends State<InputData> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Image.asset('assets/dummylogo.png', width: 150, height: 150),
+              Image.asset('assets/logo.png', width: 150, height: 150),
               const SizedBox(height: 20),
               const Text(
-                'Fill a new Entry',
-                style: TextStyle(fontSize: 28),
+                'Add a New Record',
+                style: TextStyle(fontSize: 26),
               ),
               const SizedBox(height: 20),
               Padding(

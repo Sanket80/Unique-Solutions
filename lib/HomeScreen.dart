@@ -282,11 +282,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   CircleAvatar(
                     radius: 34,
-                    backgroundImage: AssetImage('assets/images/logo.png'),
+                    //backgroundColor: Colors.white,
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/logo.png',
+                        width: 48, // Adjust to ensure the image fits well
+                        height: 48, // Match the width for a circular fit
+                        fit: BoxFit.cover, // Cover to ensure the image fills the CircleAvatar
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Company App',
+                    'Unique Solutions',
                     style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
                 ],
