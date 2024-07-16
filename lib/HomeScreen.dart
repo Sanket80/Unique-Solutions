@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'InputData.dart';
 import 'PdfViewerScreen.dart';
+import 'TransactionHistory.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key});
@@ -733,11 +734,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     ),
                                                   ),
                                                   IconButton(
-                                                    onPressed: () {},
-                                                    icon: Icon(Icons.history,
-                                                        color: Colors.grey[600],
-                                                        size: 22),
-                                                  ),
+                                                    icon: Icon(Icons.history),
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) => TransactionHistoryScreen(recordId: record['id']),
+                                                        ),
+                                                      );
+                                                    },
+                                                  )
+
                                                 ],
                                               ),
                                             ],
