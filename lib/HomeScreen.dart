@@ -80,11 +80,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _editRecord(Map<String, dynamic> record) async {
     TextEditingController totalPriceController =
-        TextEditingController(text: record['total_price'].toString());
+    TextEditingController(text: record['total_price'].toString());
     TextEditingController paidAmountController =
-        TextEditingController(text: record['paid_amount'].toString());
+    TextEditingController(text: '0');
     TextEditingController remainingAmountController =
-        TextEditingController(text: record['remaining_amount'].toString());
+    TextEditingController(text: record['remaining_amount'].toString());
+    TextEditingController transactionDescriptionController = TextEditingController();
 
     // Function to update remaining amount
     void _updateRemainingAmount() {
@@ -111,35 +112,73 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           backgroundColor: Colors.white,
           title: Text('Edit Record'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: totalPriceController,
-                  decoration: InputDecoration(labelText: 'Total Amount'),
-                  keyboardType: TextInputType.number,
-                ),
-                TextField(
-                  controller: paidAmountController,
-                  decoration: InputDecoration(labelText: 'Paid Amount'),
-                  keyboardType: TextInputType.number,
-                ),
-                TextField(
-                  controller: remainingAmountController,
-                  decoration: InputDecoration(labelText: 'Unpaid Amount'),
-                  keyboardType: TextInputType.number,
-                  enabled: false, // Disable editing
-                ),
-              ],
+          content: Container(
+            width: double.maxFinite, // Use maximum width
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Total Amount: ₹', style: TextStyle(fontSize: 16)),
+                      Expanded(
+                        child: TextField(
+                          controller: totalPriceController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            border: InputBorder.none, // No underline
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text('Total Paid: ', style: TextStyle(fontSize: 16)),
+                      Text('₹${record['paid_amount']}', style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Pay Now: ₹', style: TextStyle(fontSize: 16)),
+                      Expanded(
+                        child: TextField(
+                          controller: paidAmountController,
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text('Unpaid Amount: ', style: TextStyle(fontSize: 16)),
+                      Text('₹${record['remaining_amount']}', style: TextStyle(fontSize: 16,color: Colors.grey)),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    controller: transactionDescriptionController,
+                    decoration: InputDecoration(
+                      labelText: 'Transaction Description',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+
           actions: <Widget>[
             TextButton(
               child: Text(
                 'Cancel',
-                style: TextStyle(
-                  color: Colors.grey[500],
-                ),
+                style: TextStyle(color: Colors.grey[500]),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -152,22 +191,57 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               onPressed: () async {
                 try {
+                  // Get the current date and time for transaction
+                  Timestamp transactionTime = Timestamp.now();
+
+                  // Calculate the total paid amount from existing transactions
+                  double totalPaid = 0.0;
+
+                  if (record['transactions'] != null) {
+                    for (var transaction in record['transactions']) {
+                      totalPaid += double.tryParse(transaction['amount']) ?? 0.0;
+                    }
+                  }
+
+                  // Add the new paid amount from the current transaction
+                  double newPaidAmount = double.tryParse(paidAmountController.text) ?? 0.0;
+                  totalPaid += newPaidAmount;
+                  // update remaining amount as total price - total paid amount
+                  double totalPrice = double.tryParse(totalPriceController.text) ?? 0.0;
+                  double remainingAmount = totalPrice - totalPaid;
+
+
+                  // Update Firestore record
                   await FirebaseFirestore.instance
                       .collection('Data')
                       .doc(record['id'])
                       .update({
-                    'total_price': totalPriceController.text, // Store as string
-                    'paid_amount': paidAmountController.text, // Store as string
-                    'remaining_amount':
-                        remainingAmountController.text, // Store as string
+                    'total_price': totalPriceController.text,
+                    'paid_amount': totalPaid.toString(), // Update total paid amount
+                    'remaining_amount': remainingAmount.toString(),
                   });
+
+                  // Add a new transaction in the transactions array
+                  await FirebaseFirestore.instance
+                      .collection('Data')
+                      .doc(record['id'])
+                      .update({
+                    'transactions': FieldValue.arrayUnion([
+                      {
+                        'amount': paidAmountController.text,
+                        'description': transactionDescriptionController.text,
+                        'timestamp': transactionTime,
+                      }
+                    ])
+                  });
+
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Record updated successfully')),
+                    SnackBar(content: Text('Record and transaction updated successfully')),
                   );
                   Navigator.of(context).pop();
                   _searchForRecord(); // Refresh the search result
                 } catch (error) {
-                  print('Error updating record: $error');
+                  print('Error updating record or transaction: $error');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Failed to update record')),
                   );
@@ -179,6 +253,30 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+
+
+
+  Future<void> addTransaction(String recordId, String amount, String description, Timestamp transactionTime) async {
+    try {
+      DocumentReference recordRef = FirebaseFirestore.instance.collection('Data').doc(recordId);
+
+      // Update the transactions array
+      await recordRef.update({
+        'transactions': FieldValue.arrayUnion([
+          {
+            'amount': amount,
+            'description': description,
+            'timestamp': transactionTime,
+          }
+        ])
+      });
+    } catch (error) {
+      print('Error adding transaction: $error');
+      throw error; // Rethrow the error for handling in the caller function
+    }
+  }
+
+
 
   Future<void> uploadPdfToStorage(String documentId, File pdfFile) async {
     // Create a reference to the Firebase Storage
