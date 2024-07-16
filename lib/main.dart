@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'package:company/HomeScreen.dart';
-import 'package:company/InputData.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+
+import 'HomeScreen.dart';
 
 void main() async {
 

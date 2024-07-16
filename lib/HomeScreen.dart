@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:company/stats.dart';
+
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:unique_sol/stats.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'InputData.dart';
