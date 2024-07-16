@@ -23,29 +23,52 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>>? _recordData;
 
   Future<void> _deleteRecord(String documentId) async {
-    try {
-      await FirebaseFirestore.instance.collection('Data').doc(documentId).delete();
-      print('Record deleted successfully');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Record deleted successfully')),
-      );
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Confirmation'),
+          content: Text('Do you really want to delete this record?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('Cancel', style: TextStyle(color: Colors.grey[500])),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Delete', style: TextStyle(color: Colors.black)),
+            ),
+          ],
+        );
+      },
+    );
 
-      // Remove the deleted record from the local list and update the state
-      setState(() {
-        _recordData = _recordData?.where((record) => record['id'] != documentId).toList();
+    if (confirmed == true) {
+      try {
+        await FirebaseFirestore.instance.collection('Data').doc(documentId).delete();
+        print('Record deleted successfully');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Record deleted successfully')),
+        );
 
-        // If _recordData is empty, set _recordFound to false
-        if (_recordData == null || _recordData!.isEmpty) {
-          _recordFound = false;
-        }
-      });
-    } catch (error) {
-      print('Error deleting record: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete record')),
-      );
+        // Remove the deleted record from the local list and update the state
+        setState(() {
+          _recordData = _recordData?.where((record) => record['id'] != documentId).toList();
+
+          // If _recordData is empty, set _recordFound to false
+          if (_recordData == null || _recordData!.isEmpty) {
+            _recordFound = false;
+          }
+        });
+      } catch (error) {
+        print('Error deleting record: $error');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete record')),
+        );
+      }
     }
   }
+
 
 
   Future<void> _editRecord(Map<String, dynamic> record) async {
@@ -369,13 +392,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('Quantity: ${record['quantity']}', style: TextStyle(fontSize: 17)),
-                          IconButton(
-                            padding: EdgeInsets.zero,
-                              onPressed: () {
-                                _editRecord(record);
-                              },
-                              icon: Icon(Icons.edit, color: Colors.grey[600], size: 22),
-                            ),
+                          Row(
+                            children: [
+                              IconButton(
+                                padding: EdgeInsets.zero,
+                                onPressed: () {
+                                  _editRecord(record);
+                                },
+                                icon: Icon(Icons.edit, color: Colors.grey[600], size: 22),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  _deleteRecord(record['id']);
+                                },
+                                icon: Icon(Icons.delete_forever_rounded, color: Colors.grey[600], size: 22),
+                              ),
+                            ],
+                          ),
+
                             ],
                           ),
                           Text('Weight: ${record['weight']}', style: TextStyle(fontSize: 17)),
@@ -389,21 +423,21 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Column(
                                   children: [
-                                    Text('${record['total_price']}', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
+                                    Text('₹${record['total_price']}', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
                                     Text('Total Amt', style: TextStyle(fontSize: 15,color: Colors.grey[500])),
                                   ],
                                 ),
                                 SizedBox(width: 40,),
                                 Column(
                                   children: [
-                                    Text('${record['paid_amount']}', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
+                                    Text('₹${record['paid_amount']}', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: Colors.green)),
                                     Text('Paid', style: TextStyle(fontSize: 15,color: Colors.grey[500])),
                                   ],
                                 ),
                                 const SizedBox(width: 40),
                                 Column(
                                   children: [
-                                    Text('${record['remaining_amount']}', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
+                                    Text('₹${record['remaining_amount']}', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: Colors.red)),
                                     Text('Due', style: TextStyle(fontSize: 15,color: Colors.grey[500])),
                                   ],
                                 ),

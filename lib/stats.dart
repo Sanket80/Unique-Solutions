@@ -43,25 +43,25 @@ class StatisticsScreen extends StatelessWidget {
                     PieChartData(
                       sections: [
                         PieChartSectionData(
-                          color: Color(0xFF474747),
+                          color: Colors.blue,
                           value: totalAmount,
-                          title: '\$$totalAmount',
+                          title: '\₹$totalAmount',
                           radius: 70,
                           showTitle: true,
                           titleStyle: TextStyle(color: Colors.white),
                         ),
                         PieChartSectionData(
-                          color: Color(0xFF787878),
+                          color: Colors.green,
                           value: paidAmount,
-                          title: '\$$paidAmount',
+                          title: '\₹$paidAmount',
                           radius: 70,
                           showTitle: true,
                           titleStyle: TextStyle(color: Colors.white),
                         ),
                         PieChartSectionData(
-                          color: Color(0xFFadadad),
+                          color: Colors.red,
                           value: remainingAmount,
-                          title: '\$$remainingAmount',
+                          title: '\₹$remainingAmount',
                           radius: 70,
                           showTitle: true,
                           titleStyle: TextStyle(color: Colors.white),
@@ -94,7 +94,7 @@ class StatisticsScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 8.0),
                         child: Text(
-                          '\$$totalAmount',
+                          '\₹$totalAmount',
                           style: TextStyle(fontSize: 18),
                         ),
                       ),
@@ -116,7 +116,7 @@ class StatisticsScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 8.0),
                         child: Text(
-                          '\$$paidAmount',
+                          '\₹$paidAmount',
                           style: TextStyle(fontSize: 18),
                         ),
                       ),
@@ -138,7 +138,7 @@ class StatisticsScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 8.0),
                         child: Text(
-                          '\$$remainingAmount',
+                          '\₹$remainingAmount',
                           style: TextStyle(fontSize: 18),
                         ),
                       ),
