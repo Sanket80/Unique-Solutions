@@ -80,7 +80,7 @@ class _InputDataState extends State<InputData> {
   String? selectedCategory;
   String? selectedWeight;
   List<String> categories = ['Gloves', 'Cotton'];
-  List<int> gloveWeights = [40, 50, 60, 70, 80, 90];
+  List<int> gloveWeights = [40, 50, 55, 60, 70, 80, 90];
 
   @override
   void initState() {
