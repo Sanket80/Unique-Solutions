@@ -177,7 +177,7 @@ class _InputDataState extends State<InputData> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Image.asset('assets/logo.png', width: 150, height: 150),
+              Image.asset('assets/dummylogo.png', width: 150, height: 150),
               const SizedBox(height: 20),
               const Text(
                 'Fill a new Entry',
