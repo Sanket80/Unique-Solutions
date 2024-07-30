@@ -43,9 +43,47 @@ class TransactionHistoryScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Total Amount: $totalAmount', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
-                    Text('Remaining Amount: $remainingAmount', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold)),
+                    Table(
+                      border: TableBorder.all(color: Colors.black, width: 1), // Optional: add border to the table
+                      children: [
+                        TableRow(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                'Total Amount',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                '₹$totalAmount',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          ],
+                        ),
+                        TableRow(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                'Remaining Amount',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                '₹$remainingAmount',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
                   ],
                 ),
               ),
@@ -75,8 +113,8 @@ class TransactionHistoryScreen extends StatelessWidget {
                         String formattedDateTime = '${timestamp.toLocal().toString().split(' ')[0]}  ${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
 
                         return ListTile(
-                          title: Text('Amount: ${transaction['amount']}'),
-                          subtitle: Text('Date: $formattedDateTime\nDescription: $description'),
+                          title: Text('Amount: ₹${transaction['amount']}'),
+                          subtitle: Text('Date: $formattedDateTime\nDescription: $description',style: TextStyle(color: Colors.grey[500]),),
                           trailing: Icon(Icons.arrow_forward_ios),
                         );
                       },
