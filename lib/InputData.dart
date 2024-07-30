@@ -10,6 +10,7 @@ class InputData extends StatefulWidget {
 }
 
 class _InputDataState extends State<InputData> {
+  final _formKey = GlobalKey<FormState>();
   TextEditingController _nameController = TextEditingController();
   TextEditingController _quantityController = TextEditingController();
   TextEditingController _priceController = TextEditingController();
@@ -109,53 +110,56 @@ class _InputDataState extends State<InputData> {
   }
 
   Future<void> _addDataToFirestore(BuildContext context) async {
-    final name = _nameController.text;
-    final quantity = _quantityController.text;
-    final price = _priceController.text;
-    final totalPrice = _totalPriceController.text;
-    final paidAmount = '0.0';
-    final remainingAmount = totalPrice;
-    final category = selectedCategory;
-    final weight = selectedCategory == 'Cotton' ? '${_cottonWeightController.text} kg' : '$selectedWeight gms';
+    if(_formKey.currentState?.validate() ?? false) {
+      final name = _nameController.text;
+      final quantity = _quantityController.text;
+      final price = _priceController.text;
+      final totalPrice = _totalPriceController.text;
+      final paidAmount = '0.0';
+      final remainingAmount = totalPrice;
+      final category = selectedCategory;
+      final weight = selectedCategory == 'Cotton' ? '${_cottonWeightController.text} kg' : '$selectedWeight gms';
 
-    // Generate a new document ID
-    final newDoc = FirebaseFirestore.instance.collection('Data').doc();
-    final docId = newDoc.id;
+      // Generate a new document ID
+      final newDoc = FirebaseFirestore.instance.collection('Data').doc();
+      final docId = newDoc.id;
 
-    try {
-      await newDoc.set({
-        'id': docId,  // Add the generated ID to the document data
-        'name': name,
-        'category': category,
-        'quantity': quantity,
-        'weight': weight,
-        'price': price,
-        'total_price': totalPrice,
-        'paid_amount': paidAmount,
-        'remaining_amount': remainingAmount,
-        'date': DateTime.now(),
-      });
+      try {
+        await newDoc.set({
+          'id': docId,  // Add the generated ID to the document data
+          'name': name,
+          'category': category,
+          'quantity': quantity,
+          'weight': weight,
+          'price': price,
+          'total_price': totalPrice,
+          'paid_amount': paidAmount,
+          'remaining_amount': remainingAmount,
+          'date': DateTime.now(),
+        });
 
-      print('Data added to Firestore with ID: $docId');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Record added successfully'),
-        ),
-      );
+        print('Data added to Firestore with ID: $docId');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Record added successfully'),
+          ),
+        );
 
-      // Clear text fields after adding the record
-      _nameController.clear();
-      selectedCategory = null;
-      _quantityController.clear();
-      selectedWeight = null;
-      _priceController.clear();
-      _totalPriceController.clear();
-      paidController.clear();
-      remainingController.clear();
-      _cottonWeightController.clear();
-    } catch (error) {
-      print('Error adding data to Firestore: $error');
+        // Clear text fields after adding the record
+        _nameController.clear();
+        selectedCategory = null;
+        _quantityController.clear();
+        selectedWeight = null;
+        _priceController.clear();
+        _totalPriceController.clear();
+        paidController.clear();
+        remainingController.clear();
+        _cottonWeightController.clear();
+      } catch (error) {
+        print('Error adding data to Firestore: $error');
+      }
     }
+
   }
 
 
@@ -174,82 +178,47 @@ class _InputDataState extends State<InputData> {
       ),
       body: Center(
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Image.asset('assets/logo.png', width: 150, height: 150),
-              const SizedBox(height: 20),
-              const Text(
-                'Add a New Record',
-                style: TextStyle(fontSize: 26),
-              ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                child: Container(
-                  child: TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      hintText: 'Name',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.text,
-                  ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                Image.asset('assets/logo.png', width: 150, height: 150),
+                const SizedBox(height: 20),
+                const Text(
+                  'Add a New Record',
+                  style: TextStyle(fontSize: 26),
                 ),
-              ),
-              const SizedBox(height: 8),
-              // text field for category
-              // Category Dropdown
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                child: Container(
-                  height: 62,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black54), // Match the TextField border color
-                    borderRadius: BorderRadius.circular(4.0), // Match the TextField border radius
-                  ),
-                  child: DropdownButtonHideUnderline( // Hide the default underline of DropdownButton
-                    child: DropdownButton<String>(
-                      value: selectedCategory,
-                      hint: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12),
-                        child: Text('Select Category',style: TextStyle(color: Colors.grey[700])),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                  child: Container(
+                    child: TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Name',
+                        border: OutlineInputBorder(),
                       ),
-                      isExpanded: true,
-                      items: categories.map((String category) {
-                        return DropdownMenuItem<String>(
-                          value: category,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12), // Increase vertical padding
-                            child: Text(category,style: TextStyle(color: Colors.grey[700]),),
-                          ),
-                        );
-                      }).toList(),
+                      keyboardType: TextInputType.text,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a name';
+                        }
+                        // RegEx to check if the name contains only alphabets and spaces
+                        if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(value)) {
+                          return 'Please enter a valid name';
+                        }
+                        return null;
+                      },
                       onChanged: (value) {
-                        setState(() {
-                          selectedCategory = value;
-                          selectedWeight = null; // Reset weight when category changes
-                        });
+                        // Validate the name field on every change
+                        _formKey.currentState?.validate();
                       },
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                child: TextField(
-                  controller: _quantityController,
-                  decoration: const InputDecoration(
-                    hintText: 'Quantity',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(height: 8),
-              // want to add dropdown for weight, if category is gloves, then i want dropdown and if categeory is cotton, i wnat textfield
-              if(selectedCategory == 'Gloves')
+                const SizedBox(height: 8),
+                // text field for category
+                // Category Dropdown
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 18.0),
                   child: Container(
@@ -260,92 +229,167 @@ class _InputDataState extends State<InputData> {
                     ),
                     child: DropdownButtonHideUnderline( // Hide the default underline of DropdownButton
                       child: DropdownButton<String>(
-                        value: selectedWeight,
+                        value: selectedCategory,
                         hint: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12), // Increase vertical padding
-                          child: const Text('Select Weight'),
+                          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12),
+                          child: Text('Select Category',style: TextStyle(color: Colors.grey[700])),
                         ),
                         isExpanded: true,
-                        items: gloveWeights.map((int weight) {
+                        items: categories.map((String category) {
                           return DropdownMenuItem<String>(
-                            value: weight.toString(),
+                            value: category,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12), // Increase vertical padding
-                              // in gms
-                              child: Text('$weight gms',style: TextStyle(color: Colors.grey[700]),),
+                              child: Text(category,style: TextStyle(color: Colors.grey[700]),),
                             ),
                           );
                         }).toList(),
                         onChanged: (value) {
                           setState(() {
-                            selectedWeight = value;
+                            selectedCategory = value;
+                            selectedWeight = null; // Reset weight when category changes
                           });
                         },
                       ),
                     ),
                   ),
-                )
-              else if (selectedCategory == 'Cotton')
+                ),
+
+                const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                  child: TextField(
-                    controller: _cottonWeightController,
+                  child: TextFormField(
+                    controller: _quantityController,
                     decoration: const InputDecoration(
-                      hintText: 'Enter Weight (kgs)',
+                      hintText: 'Quantity',
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a quantity';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      // Validate the quantity field on every change
+                      _formKey.currentState?.validate();
+                    },
                   ),
                 ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                child: TextField(
-                  controller: _priceController,
-                  decoration: const InputDecoration(
-                    hintText: 'Price',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                child: TextField(
-                  controller: _totalPriceController,
-                  decoration: const InputDecoration(
-                    hintText: 'Total Amount',
-                    border: OutlineInputBorder(),
-                  ),
-                  enabled: false,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => _addDataToFirestore(context),
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.black),
-                      foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                      shape: MaterialStateProperty.all<OutlinedBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4.0),
+                const SizedBox(height: 8),
+                // want to add dropdown for weight, if category is gloves, then i want dropdown and if categeory is cotton, i wnat textfield
+                if(selectedCategory == 'Gloves')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                    child: Container(
+                      height: 62,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black54), // Match the TextField border color
+                        borderRadius: BorderRadius.circular(4.0), // Match the TextField border radius
+                      ),
+                      child: DropdownButtonHideUnderline( // Hide the default underline of DropdownButton
+                        child: DropdownButton<String>(
+                          value: selectedWeight,
+                          hint: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12), // Increase vertical padding
+                            child: const Text('Select Weight'),
+                          ),
+                          isExpanded: true,
+                          items: gloveWeights.map((int weight) {
+                            return DropdownMenuItem<String>(
+                              value: weight.toString(),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12), // Increase vertical padding
+                                // in gms
+                                child: Text('$weight gms',style: TextStyle(color: Colors.grey[700]),),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              selectedWeight = value;
+                            });
+                          },
                         ),
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(18.0),
-                      child: Text('Submit'),
+                  )
+                else if (selectedCategory == 'Cotton')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                    child: TextField(
+                      controller: _cottonWeightController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter Weight (kgs)',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                  child: TextFormField(
+                    controller: _priceController,
+                    decoration: const InputDecoration(
+                      hintText: 'Price',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a price';
+                      }
+                      if (double.tryParse(value) == null) {
+                        return 'Please enter a valid price';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      // Validate the price field on every change
+                      _formKey.currentState?.validate();
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                  child: TextField(
+                    controller: _totalPriceController,
+                    decoration: const InputDecoration(
+                      hintText: 'Total Amount',
+                      border: OutlineInputBorder(),
+                    ),
+                    enabled: false,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _addDataToFirestore(context),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all<Color>(Colors.black),
+                        foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                        shape: MaterialStateProperty.all<OutlinedBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18.0),
+                        child: Text('Submit'),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
