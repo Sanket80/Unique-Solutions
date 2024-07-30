@@ -8,14 +8,14 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  String storageBucketUrl = 'gs://company-805b3.appspot.com';
+  String storageBucketUrl = 'gs://unique-solutions-15768.appspot.com';
   Platform.isAndroid
       ? await Firebase.initializeApp(
     options: FirebaseOptions(
-      apiKey: 'AIzaSyAllijdJQf0f1i2FhdlHMzyoUeZVig4RSI',
-      appId: '1:805456954493:android:d6fed05879543974949d14',
-      messagingSenderId: '805456954493',
-      projectId: 'company-805b3',
+      apiKey: 'AIzaSyAy7wuG7KDlHT737NNsNjjSScnQ6LPoNhI',
+      appId: '1:448572083843:android:bfd9b11099d31c9d6295b6',
+      messagingSenderId: '448572083843',
+      projectId: 'unique-solutions-15768',
       storageBucket: storageBucketUrl,
     ),
   )
