@@ -13,7 +13,10 @@ class TransactionHistoryScreen extends StatelessWidget {
 
   Future<List<Map<String, dynamic>>> _fetchTransactions() async {
     var doc = await FirebaseFirestore.instance.collection('Data').doc(recordId).get();
-    return List<Map<String, dynamic>>.from(doc['transactions'] ?? []);
+    if (doc.exists && doc.data()!.containsKey('transactions')) {
+      return List<Map<String, dynamic>>.from(doc['transactions'] ?? []);
+    }
+    return [];
   }
 
   @override
@@ -96,7 +99,7 @@ class TransactionHistoryScreen extends StatelessWidget {
                     } else if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     } else if (snapshot.data!.isEmpty) {
-                      return Center(child: Text('No transactions found.'));
+                      return Center(child: Text('No transactions found.', style: TextStyle(color: Colors.grey[500], fontSize: 18)));
                     }
 
                     var transactions = snapshot.data!;

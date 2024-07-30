@@ -152,6 +152,7 @@ class _InputDataState extends State<InputData> {
       _totalPriceController.clear();
       paidController.clear();
       remainingController.clear();
+      _cottonWeightController.clear();
     } catch (error) {
       print('Error adding data to Firestore: $error');
     }

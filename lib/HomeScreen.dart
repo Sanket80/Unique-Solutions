@@ -27,6 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSearching = false;
   bool _recordFound = false;
   List<Map<String, dynamic>>? _recordData;
+  List<String> _suggestions = [];
+  FocusNode _focusNode = FocusNode();
 
   Future<void> _deleteRecord(String documentId) async {
     final confirmed = await showDialog<bool>(
@@ -82,12 +84,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _editRecord(Map<String, dynamic> record) async {
     TextEditingController totalPriceController =
-    TextEditingController(text: record['total_price'].toString());
+        TextEditingController(text: record['total_price'].toString());
     TextEditingController paidAmountController =
-    TextEditingController(text: '0');
+        TextEditingController(text: '0');
     TextEditingController remainingAmountController =
-    TextEditingController(text: record['remaining_amount'].toString());
-    TextEditingController transactionDescriptionController = TextEditingController();
+        TextEditingController(text: record['remaining_amount'].toString());
+    TextEditingController transactionDescriptionController =
+        TextEditingController();
 
     // Function to update remaining amount
     void _updateRemainingAmount() {
@@ -140,7 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text('Total Paid: ', style: TextStyle(fontSize: 16)),
-                      Text('₹${record['paid_amount']}', style: TextStyle(fontSize: 16)),
+                      Text('₹${record['paid_amount']}',
+                          style: TextStyle(fontSize: 16)),
                     ],
                   ),
                   SizedBox(height: 10),
@@ -161,7 +165,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text('Unpaid Amount: ', style: TextStyle(fontSize: 16)),
-                      Text('₹${record['remaining_amount']}', style: TextStyle(fontSize: 16,color: Colors.grey)),
+                      Text('₹${record['remaining_amount']}',
+                          style: TextStyle(fontSize: 16, color: Colors.grey)),
                     ],
                   ),
                   SizedBox(height: 10),
@@ -175,7 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-
           actions: <Widget>[
             TextButton(
               child: Text(
@@ -201,17 +205,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   if (record['transactions'] != null) {
                     for (var transaction in record['transactions']) {
-                      totalPaid += double.tryParse(transaction['amount']) ?? 0.0;
+                      totalPaid +=
+                          double.tryParse(transaction['amount']) ?? 0.0;
                     }
                   }
 
                   // Add the new paid amount from the current transaction
-                  double newPaidAmount = double.tryParse(paidAmountController.text) ?? 0.0;
+                  double newPaidAmount =
+                      double.tryParse(paidAmountController.text) ?? 0.0;
                   totalPaid += newPaidAmount;
                   // update remaining amount as total price - total paid amount
-                  double totalPrice = double.tryParse(totalPriceController.text) ?? 0.0;
+                  double totalPrice =
+                      double.tryParse(totalPriceController.text) ?? 0.0;
                   double remainingAmount = totalPrice - totalPaid;
-
 
                   // Update Firestore record
                   await FirebaseFirestore.instance
@@ -219,7 +225,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       .doc(record['id'])
                       .update({
                     'total_price': totalPriceController.text,
-                    'paid_amount': totalPaid.toString(), // Update total paid amount
+                    'paid_amount':
+                        totalPaid.toString(), // Update total paid amount
                     'remaining_amount': remainingAmount.toString(),
                   });
 
@@ -238,7 +245,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Record and transaction updated successfully')),
+                    SnackBar(
+                        content: Text(
+                            'Record and transaction updated successfully')),
                   );
                   Navigator.of(context).pop();
                   _searchForRecord(); // Refresh the search result
@@ -256,11 +265,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-
-  Future<void> addTransaction(String recordId, String amount, String description, Timestamp transactionTime) async {
+  Future<void> addTransaction(String recordId, String amount,
+      String description, Timestamp transactionTime) async {
     try {
-      DocumentReference recordRef = FirebaseFirestore.instance.collection('Data').doc(recordId);
+      DocumentReference recordRef =
+          FirebaseFirestore.instance.collection('Data').doc(recordId);
 
       // Update the transactions array
       await recordRef.update({
@@ -277,8 +286,6 @@ class _HomeScreenState extends State<HomeScreen> {
       throw error; // Rethrow the error for handling in the caller function
     }
   }
-
-
 
   Future<void> uploadPdfToStorage(String documentId, File pdfFile) async {
     // Create a reference to the Firebase Storage
@@ -350,11 +357,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchRecordData(String recordId) async {
-    DocumentSnapshot snapshot = await FirebaseFirestore.instance.collection('Data').doc(recordId).get();
+    DocumentSnapshot snapshot =
+        await FirebaseFirestore.instance.collection('Data').doc(recordId).get();
     if (snapshot.exists) {
       setState(() {
         // Find the index of the record to update
-        int index = _recordData!.indexWhere((record) => record['id'] == recordId);
+        int index =
+            _recordData!.indexWhere((record) => record['id'] == recordId);
         if (index != -1) {
           _recordData![index] = snapshot.data() as Map<String, dynamic>;
         }
@@ -362,7 +371,40 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _getSuggestions(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _suggestions = [];
+      });
+      return;
+    }
 
+    // Normalize the user query to lowercase
+    var normalizedQuery = query.toLowerCase();
+
+    var snapshot = await FirebaseFirestore.instance
+        .collection('Data')
+        .get();
+
+    // Filter the documents in your application to find matches
+    var filteredDocs = snapshot.docs.where((doc) {
+      var name = doc['name'].toString().toLowerCase(); // Normalize the name
+      return name.startsWith(normalizedQuery);
+    }).toList();
+
+    setState(() {
+      _suggestions = filteredDocs.map((doc) => doc['name'].toString()).toList();
+    });
+  }
+
+  void _onSuggestionTap(String suggestion) {
+    setState(() {
+      _searchText = suggestion;
+      _searchController.text = suggestion;
+      _suggestions = [];
+    });
+    _searchForRecord();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -388,7 +430,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         'assets/logo.png',
                         width: 48, // Adjust to ensure the image fits well
                         height: 48, // Match the width for a circular fit
-                        fit: BoxFit.cover, // Cover to ensure the image fills the CircleAvatar
+                        fit: BoxFit
+                            .cover, // Cover to ensure the image fills the CircleAvatar
                       ),
                     ),
                   ),
@@ -468,6 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: TextField(
                         controller: _searchController,
+                        focusNode: _focusNode,
                         decoration: const InputDecoration(
                           hintText: 'Search',
                           hintStyle: TextStyle(color: Colors.white),
@@ -478,6 +522,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           setState(() {
                             _searchText = value;
                           });
+                          _getSuggestions(value);
+                        },
+                        onSubmitted: (value) {
+                          _searchForRecord();
                         },
                       ),
                     ),
@@ -492,8 +540,35 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            if (_suggestions.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight: 150,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ListView.builder(
+                    itemCount: _suggestions.length,
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8,vertical: 0),
+                        leading: Icon(Icons.person,),
+                        title: Text(_suggestions[index],
+                        style: TextStyle(color: Colors.black,fontSize: 16),),
+                        onTap: () =>
+                            _onSuggestionTap(_suggestions[index]),
+                      );
+                    },
+                  ),
+                ),
+              ),
 
-            // Show search result
+
             if (_isSearching)
               _recordFound
                   ? Container(
@@ -700,37 +775,52 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ],
                                           ),
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
                                                   'Weight: ${record['weight']}',
-                                                  style: TextStyle(fontSize: 17)),
+                                                  style:
+                                                      TextStyle(fontSize: 17)),
                                               Row(
                                                 children: [
                                                   IconButton(
                                                     onPressed: () async {
                                                       // Use the current record's ID
-                                                      String documentId = record['id'];
+                                                      String documentId =
+                                                          record['id'];
 
-                                                      if (record.containsKey('pdfUrl')) {
+                                                      if (record.containsKey(
+                                                          'pdfUrl')) {
                                                         // PDF already uploaded, open it
-                                                        openPdf(context, documentId);
+                                                        openPdf(context,
+                                                            documentId);
                                                       } else {
-                                                        File? pdfFile = await pickPdf();
+                                                        File? pdfFile =
+                                                            await pickPdf();
                                                         if (pdfFile != null) {
-                                                          await uploadPdfToStorage(documentId, pdfFile);
-                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                            SnackBar(content: Text('PDF uploaded successfully')),
+                                                          await uploadPdfToStorage(
+                                                              documentId,
+                                                              pdfFile);
+                                                          ScaffoldMessenger.of(
+                                                                  context)
+                                                              .showSnackBar(
+                                                            SnackBar(
+                                                                content: Text(
+                                                                    'PDF uploaded successfully')),
                                                           );
                                                           // Fetch the updated data for the specific record
-                                                          await _fetchRecordData(documentId);
-
+                                                          await _fetchRecordData(
+                                                              documentId);
                                                         }
                                                       }
                                                     },
                                                     icon: Icon(
                                                       Icons.picture_as_pdf,
-                                                      color: record.containsKey('pdfUrl') ? Colors.green : Colors.red,
+                                                      color: record.containsKey(
+                                                              'pdfUrl')
+                                                          ? Colors.green
+                                                          : Colors.red,
                                                       size: 22,
                                                     ),
                                                   ),
@@ -740,12 +830,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       Navigator.push(
                                                         context,
                                                         MaterialPageRoute(
-                                                          builder: (context) => TransactionHistoryScreen(recordId: record['id']),
+                                                          builder: (context) =>
+                                                              TransactionHistoryScreen(
+                                                                  recordId:
+                                                                      record[
+                                                                          'id']),
                                                         ),
                                                       );
                                                     },
                                                   )
-
                                                 ],
                                               ),
                                             ],
@@ -839,7 +932,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     )
-                  : const Text('Record not found'),
+                  : Center(child: const Text('Record not found',style: TextStyle(color: Colors.grey,fontSize: 16),)),
           ],
         ),
       ),
@@ -860,10 +953,13 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       return; // Exit the method without performing the search
     }
+    _focusNode.unfocus();
+
     setState(() {
       _isSearching = true;
       _recordFound = false;
       _recordData = null;
+      _suggestions = [];
     });
 
     final querySnapshot =
