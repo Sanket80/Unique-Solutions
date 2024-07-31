@@ -29,6 +29,14 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>>? _recordData;
   List<String> _suggestions = [];
   FocusNode _focusNode = FocusNode();
+  List<Map<String, dynamic>> _remainingRecords = [];
+  int _totalOrders = 0;
+  int _paidOrders = 0;
+  int _unpaidOrders = 0;
+  double _totalAmount = 0;
+  double _paidAmount = 0;
+  double _remainingAmount = 0;
+  Map<String, dynamic> _summaryData = {};
 
   Future<void> _deleteRecord(String documentId) async {
     final confirmed = await showDialog<bool>(
@@ -361,14 +369,64 @@ class _HomeScreenState extends State<HomeScreen> {
         await FirebaseFirestore.instance.collection('Data').doc(recordId).get();
     if (snapshot.exists) {
       setState(() {
-        // Find the index of the record to update
         int index =
             _recordData!.indexWhere((record) => record['id'] == recordId);
         if (index != -1) {
           _recordData![index] = snapshot.data() as Map<String, dynamic>;
         }
       });
+      _updateSummaryData(); // Update summary data after fetching a record
     }
+  }
+
+  void _updateSummaryData() {
+    if (_recordData == null || _recordData!.isEmpty) {
+      setState(() {
+        _summaryData = {
+          'total_orders': 0,
+          'paid_orders': 0,
+          'unpaid_orders': 0,
+          'total_amount': 0.0,
+          'paid_amount': 0.0,
+          'remaining_amount': 0.0,
+        };
+      });
+      return;
+    }
+
+    int totalOrders = _recordData!.length;
+    int paidOrders = 0;
+    int unpaidOrders = 0;
+    double totalAmount = 0.0;
+    double paidAmount = 0.0;
+    double remainingAmount = 0.0;
+
+    for (var record in _recordData!) {
+      double recordPaidAmount = double.tryParse(record['paid_amount']) ?? 0.0;
+      double recordRemainingAmount =
+          double.tryParse(record['remaining_amount']) ?? 0.0;
+
+      totalAmount += recordPaidAmount + recordRemainingAmount;
+      paidAmount += recordPaidAmount;
+      remainingAmount += recordRemainingAmount;
+
+      if (remainingAmount == 0.0) {
+        paidOrders += 1;
+      } else {
+        unpaidOrders += 1;
+      }
+    }
+
+    setState(() {
+      _summaryData = {
+        'total_orders': totalOrders,
+        'paid_orders': paidOrders,
+        'unpaid_orders': unpaidOrders,
+        'total_amount': totalAmount,
+        'paid_amount': paidAmount,
+        'remaining_amount': remainingAmount,
+      };
+    });
   }
 
   void _getSuggestions(String query) async {
@@ -381,9 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     var normalizedQuery = query.toLowerCase();
 
-    var snapshot = await FirebaseFirestore.instance
-        .collection('Data')
-        .get();
+    var snapshot = await FirebaseFirestore.instance.collection('Data').get();
 
     Set<String> uniqueNames = {};
 
@@ -558,19 +614,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
                       return ListTile(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 8,vertical: 0),
-                        leading: Icon(Icons.person,),
-                        title: Text(_suggestions[index],
-                        style: TextStyle(color: Colors.black,fontSize: 16),),
-                        onTap: () =>
-                            _onSuggestionTap(_suggestions[index]),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                        leading: Icon(
+                          Icons.person,
+                        ),
+                        title: Text(
+                          _suggestions[index],
+                          style: TextStyle(color: Colors.black, fontSize: 16),
+                        ),
+                        onTap: () => _onSuggestionTap(_suggestions[index]),
                       );
                     },
                   ),
                 ),
               ),
-
-
             if (_isSearching)
               _recordFound
                   ? Container(
@@ -582,58 +640,170 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Column(
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Container(),
-                                  ),
-                                  Flexible(
-                                    flex: 2,
-                                    child: Image.asset(
-                                      'assets/images/character.png',
-                                      width: 280,
-                                      height: 180,
-                                      fit: BoxFit.contain, // Adjust the image fitting as needed
+                              Flexible(
+                                child: Center(
+                                  child: Text(
+                                    // Display the name of the searched record
+                                    'Name: $_searchText',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 20,
                                     ),
+                                    overflow: TextOverflow.ellipsis, // Prevent overflow
                                   ),
-                                  SizedBox(width: 10), // Space between the image and the icon
-                                  IconButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => InputData(
-                                            name: _recordData![0]['name'],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    icon: Icon(
-                                      Icons.add,
-                                      color: Colors.black,
-                                      size: 30,
+                                ),
+                              ),
+                              //SizedBox(width: 20), // Space between the name and the plus icon
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => InputData(
+                                        name: _searchText,
+                                      ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: Container(),
-                                  ),
-                                ],
+                                  );
+                                },
+                                icon: Icon(Icons.add),
                               ),
-                              // Name of the person
-                              Text(
-                                'Name: ${_recordData![0]['name']}',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w600, fontSize: 20),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                              const SizedBox(height: 4),
                             ],
                           ),
 
+                          SizedBox(height: 10),
+                          Table(
+                            border: TableBorder.all(
+                              color: Colors.grey.withOpacity(0.5),
+                              width: 1,
+                            ),
+                            columnWidths: {
+                              0: FlexColumnWidth(3),
+                              1: FlexColumnWidth(2),
+                            },
+                            children: [
+                              TableRow(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                ),
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text('Total Orders', style: TextStyle(fontWeight: FontWeight.w600))),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text(_summaryData?['total_orders'].toString() ?? '0')),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TableRow(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                ),
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text('Paid Orders', style: TextStyle(fontWeight: FontWeight.w600))),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text(_summaryData?['paid_orders'].toString() ?? '0')),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TableRow(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                ),
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text('Unpaid Orders', style: TextStyle(fontWeight: FontWeight.w600))),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text(_summaryData?['unpaid_orders'].toString() ?? '0')),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TableRow(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                ),
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text('Total Amount', style: TextStyle(fontWeight: FontWeight.w600))),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text('₹${_summaryData?['total_amount'].toString() ?? '0.0'}')),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TableRow(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                ),
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text('Paid Amount', style: TextStyle(fontWeight: FontWeight.w600))),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text('₹${_summaryData?['paid_amount'].toString() ?? '0.0'}')),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TableRow(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                ),
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text('Remaining Amount', style: TextStyle(fontWeight: FontWeight.w600))),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                                      child: Center(child: Text('₹${_summaryData?['remaining_amount'].toString() ?? '0.0'}')),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: 20),
                           Card(
                             color: Color.fromRGBO(255, 255, 238, 1.0),
                             child: ListTile(
@@ -956,7 +1126,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     )
-                  : Center(child: const Text('Record not found',style: TextStyle(color: Colors.grey,fontSize: 16),)),
+                  : Center(
+                      child: const Text(
+                      'Record not found',
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    )),
           ],
         ),
       ),
@@ -964,25 +1138,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _searchForRecord() async {
-    // Trim spaces from the search query
     final searchTextTrimmed = _searchText.trim().toLowerCase();
 
-    // Check if the search text is empty
     if (searchTextTrimmed.isEmpty) {
-      // Show a message indicating that the name field cannot be empty
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please enter a name to search.'),
         ),
       );
-      return; // Exit the method without performing the search
+      return;
     }
     _focusNode.unfocus();
 
     setState(() {
       _isSearching = true;
       _recordFound = false;
-      _recordData = null;
+      _recordData = [];
       _suggestions = [];
     });
 
@@ -993,32 +1164,20 @@ class _HomeScreenState extends State<HomeScreen> {
       List<Map<String, dynamic>> filteredRecords = [];
       querySnapshot.docs.forEach((doc) {
         var data = doc.data() as Map<String, dynamic>;
-        String name = data['name']
-            .toString()
-            .toLowerCase()
-            .trim(); // Convert to lowercase and trim spaces
+        String name = data['name'].toString().toLowerCase().trim();
         if (name == searchTextTrimmed) {
-          data['id'] = doc.id; // Add document ID to the data map
-
-          // Ensure numeric values for calculations
-          data['paid_amount'] =
-              double.tryParse(data['paid_amount'])?.toStringAsFixed(2) ?? '0.0';
-          data['remaining_amount'] =
-              double.tryParse(data['remaining_amount'])?.toStringAsFixed(2) ??
-                  '0.0';
-
+          data['id'] = doc.id;
           filteredRecords.add(data);
         }
       });
 
       if (filteredRecords.isNotEmpty) {
-        // Sort the filtered records by date
         filteredRecords.sort((a, b) => a['date'].compareTo(b['date']));
-
         setState(() {
           _recordFound = true;
           _recordData = filteredRecords;
         });
+        _updateSummaryData(); // Update summary data after fetching records
       } else {
         setState(() {
           _recordFound = false;
