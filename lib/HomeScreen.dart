@@ -581,38 +581,60 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: Column(
                         children: [
-                          Row(
+                          Column(
                             children: [
-                              Image.asset('assets/images/character.png',
-                                  width: 250, height: 180),
-                              IconButton(
-                                  onPressed: () {
-                                    // want to pass the name to the input data screen
-                                    Navigator.push(
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(), // Empty container to push the image to the center
+                                  ),
+                                  Flexible(
+                                    flex: 2,
+                                    child: Image.asset(
+                                      'assets/images/character.png',
+                                      width: 280,
+                                      height: 180,
+                                      fit: BoxFit.contain, // Adjust the image fitting as needed
+                                    ),
+                                  ),
+                                  SizedBox(width: 10), // Space between the image and the icon
+                                  IconButton(
+                                    onPressed: () {
+                                      Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) => InputData(
-                                                name: _recordData![0]
-                                                    ['name'])));
-                                  },
-                                  icon: Icon(
-                                    Icons.add,
-                                    color: Colors.black,
-                                    size: 30,
-                                  )),
+                                          builder: (context) => InputData(
+                                            name: _recordData![0]['name'],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    icon: Icon(
+                                      Icons.add,
+                                      color: Colors.black,
+                                      size: 30,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(), // Empty container to push the icon to the right
+                                  ),
+                                ],
+                              ),
+                              // Name of the person
+                              Text(
+                                'Name: ${_recordData![0]['name']}',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 20),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                              const SizedBox(height: 4),
                             ],
                           ),
+
                           Card(
                             color: Color.fromRGBO(255, 255, 238, 1.0),
                             child: ListTile(
-                              title: Center(
-                                child: Text(
-                                  'Name: ${_recordData![0]['name']}',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20),
-                                ),
-                              ),
                               subtitle: Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
@@ -862,7 +884,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             fontSize: 18,
                                                             fontWeight:
                                                                 FontWeight
-                                                                    .bold)),
+                                                                    .w600)),
                                                     Text('Total Amt',
                                                         style: TextStyle(
                                                             fontSize: 15,

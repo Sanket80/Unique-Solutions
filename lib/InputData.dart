@@ -18,6 +18,7 @@ class _InputDataState extends State<InputData> {
   TextEditingController paidController = TextEditingController();
   TextEditingController remainingController = TextEditingController();
   TextEditingController _cottonWeightController = TextEditingController();
+  TextEditingController _gstController = TextEditingController();
 
   // void handlePaid(BuildContext context) {
   //   showDialog(
@@ -102,10 +103,14 @@ class _InputDataState extends State<InputData> {
     if (_quantityController.text.isNotEmpty && _priceController.text.isNotEmpty) {
       final quantity = double.tryParse(_quantityController.text) ?? 0.0;
       final price = double.tryParse(_priceController.text) ?? 0.0;
-      final totalPrice = quantity * price;
-      _totalPriceController.text = totalPrice.toStringAsFixed(2);
+      final baseTotalPrice = quantity * price;
+      final gst = baseTotalPrice * 0.05; // Calculate 5% GST
+      final totalPriceWithGST = baseTotalPrice + gst;
+      _totalPriceController.text = totalPriceWithGST.toStringAsFixed(2);
+      _gstController.text = gst.toStringAsFixed(2); // Update GST text field
     } else {
       _totalPriceController.text = '';
+      _gstController.text = ''; // Clear GST text field if inputs are empty
     }
   }
 
@@ -355,13 +360,34 @@ class _InputDataState extends State<InputData> {
                 const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                  child: TextField(
-                    controller: _totalPriceController,
-                    decoration: const InputDecoration(
-                      hintText: 'Total Amount',
-                      border: OutlineInputBorder(),
-                    ),
-                    enabled: false,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: _totalPriceController,
+                          decoration: const InputDecoration(
+                            hintText: 'Total Amount',
+                            border: OutlineInputBorder(),
+                            prefixText: '₹',
+                          ),
+                          enabled: false,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        flex: 1,
+                        child: TextField(
+                          controller: _gstController,
+                          decoration: const InputDecoration(
+                            hintText: 'GST',
+                            border: OutlineInputBorder(),
+                            prefixText: '₹',
+                          ),
+                          enabled: false,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -388,6 +414,7 @@ class _InputDataState extends State<InputData> {
                     ),
                   ),
                 ),
+                SizedBox(height: 10,),
               ],
             ),
           ),
