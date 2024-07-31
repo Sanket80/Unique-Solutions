@@ -379,21 +379,23 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // Normalize the user query to lowercase
     var normalizedQuery = query.toLowerCase();
 
     var snapshot = await FirebaseFirestore.instance
         .collection('Data')
         .get();
 
-    // Filter the documents in your application to find matches
-    var filteredDocs = snapshot.docs.where((doc) {
+    Set<String> uniqueNames = {};
+
+    for (var doc in snapshot.docs) {
       var name = doc['name'].toString().toLowerCase(); // Normalize the name
-      return name.startsWith(normalizedQuery);
-    }).toList();
+      if (name.startsWith(normalizedQuery)) {
+        uniqueNames.add(name);
+      }
+    }
 
     setState(() {
-      _suggestions = filteredDocs.map((doc) => doc['name'].toString()).toList();
+      _suggestions = uniqueNames.toList();
     });
   }
 
@@ -586,7 +588,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Row(
                                 children: [
                                   Expanded(
-                                    child: Container(), // Empty container to push the image to the center
+                                    child: Container(),
                                   ),
                                   Flexible(
                                     flex: 2,
@@ -616,7 +618,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   Expanded(
-                                    child: Container(), // Empty container to push the icon to the right
+                                    child: Container(),
                                   ),
                                 ],
                               ),
